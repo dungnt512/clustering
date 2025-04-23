@@ -22,6 +22,6 @@ public class BCAPathExtend extends PathBasicExtend implements PathExtend {
 
     @Override
     public List<List<Long>> extend(List<List<Long>> path) {
-
+        return null;
     }
 }

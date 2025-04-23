@@ -33,5 +33,6 @@ public class PathValidExtend extends PathBasicExtend {
                 }
             }
         }
-        return extendedPaths;    }
+        return extendedPaths;
+    }
 }
