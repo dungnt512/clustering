@@ -16,24 +16,25 @@ public class PathBasicExtend implements PathExtend {
         this.input = input;
     }
 
+    @SuppressWarnings("DuplicatedCode")
     @Override
     public List<List<Long>> extend(List<List<Long>> paths) {
-        List<List<Long>> extendedPaths = new ArrayList<>();
+        List<List<Long>> extended_paths = new ArrayList<>();
         HashMap<Long, Boolean> visited = new HashMap<>();
         for (List<Long> path : paths) {
             visited.clear();
-            for (Long nodeId : path) {
-                visited.put(nodeId, true);
+            for (Long node_id: path) {
+                visited.put(node_id, true);
             }
 
-            for (Long nodeId : input.getNodeIds()) {
-                if (!visited.containsKey(nodeId)) {
-                    List<Long> extendedPath = new ArrayList<>(path);
-                    extendedPath.add(nodeId);
-                    extendedPaths.add(extendedPath);
+            for (Long node_id : input.getNodeIds()) {
+                if (!visited.containsKey(node_id)) {
+                    List<Long> extended_path = new ArrayList<>(path);
+                    extended_path.add(node_id);
+                    extended_paths.add(extended_path);
                 }
             }
         }
-        return extendedPaths;
+        return extended_paths;
     }
 }

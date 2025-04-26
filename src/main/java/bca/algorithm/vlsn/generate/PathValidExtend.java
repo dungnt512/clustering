@@ -17,22 +17,22 @@ public class PathValidExtend extends PathBasicExtend {
 
     @Override
     public List<List<Long>> extend(List<List<Long>> paths) {
-        List<List<Long>> extendedPaths = new ArrayList<>();
+        List<List<Long>> extended_paths = new ArrayList<>();
         HashMap<Long, Boolean> visited = new HashMap<>();
         for (List<Long> path : paths) {
             visited.clear();
-            for (Long nodeId : path) {
-                visited.put(nodeId, true);
+            for (Long node_id : path) {
+                visited.put(node_id , true);
             }
-            Long firstNodeId = path.getFirst();
-            for (Long nodeId : input.getNodeIds()) {
-                if (nodeId.compareTo(firstNodeId) > 0 && !visited.containsKey(nodeId)) {
-                    List<Long> extendedPath = new ArrayList<>(path);
-                    extendedPath.add(nodeId);
-                    extendedPaths.add(extendedPath);
+            Long first_node_id = path.getFirst();
+            for (Long node_id : input.getNodeIds()) {
+                if (node_id.compareTo(first_node_id) > 0 && !visited.containsKey(node_id)) {
+                    List<Long> extended_path = new ArrayList<>(path);
+                    extended_path.add(node_id);
+                    extended_paths.add(extended_path);
                 }
             }
         }
-        return extendedPaths;
+        return extended_paths;
     }
 }

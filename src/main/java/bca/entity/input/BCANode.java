@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -27,6 +28,16 @@ public class BCANode implements Node {
         this.node_id = node_id;
         this.adjacent_edges = new ArrayList<>();
         this.familiarities = new ArrayList<>();
+    }
+
+    public int getFamiliarity(Long vehicle_id) {
+        if (vehicle_id >= familiarities.size() || vehicle_id < 0) {
+            return Integer.MAX_VALUE;
+        }
+        BCAFamiliarity familiarity = familiarities.get(vehicle_id.intValue());
+        assert familiarity != null;
+        assert Objects.equals(familiarity.getVehicle_id(), vehicle_id);
+        return familiarity.getFamiliarity();
     }
 
     public String toString() {

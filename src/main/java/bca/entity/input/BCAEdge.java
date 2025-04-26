@@ -15,6 +15,10 @@ public class BCAEdge implements Edge {
     private Long to_node_id;
     private double distance;
 
+
+    public Long getRemaining(Long current) {
+        return current.equals(from_node_id) ? to_node_id : from_node_id;
+    }
     public String toString() {
         return "Edge{" +
                 "edge_id=" + edge_id +

@@ -14,7 +14,7 @@ public class Main {
             if (file.isFile() && file.getName().endsWith(".dat")) {
 //                System.out.println("Processing file: " + file.getName() + " " + file.getParent() + " " + file.getAbsolutePath() + " " + file.getPath());
                 System.out.println("Processing file: " + file.getPath());
-                Input input = new BCAInput(file.getPath());
+                Input input = new BCAInput(file.getPath(), false);
             }
         }
     }
