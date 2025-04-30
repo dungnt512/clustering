@@ -16,7 +16,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class BCASolutionObjective implements SolutionObjective {
     private Input input;
-    private double objective;
+    private double value;
 
     private double customer_demand_weight;
     private double familiarity_weight;
@@ -36,7 +36,7 @@ public class BCASolutionObjective implements SolutionObjective {
 
     public BCASolutionObjective(Input input, double customer_demand_weight, double familiarity_weight, double distance_weight) {
         this.input = input;
-        this.objective = Double.MAX_VALUE;
+        this.value = Double.MAX_VALUE;
 
         this.customer_demand_weight = customer_demand_weight;
         this.familiarity_weight = familiarity_weight;
@@ -60,8 +60,9 @@ public class BCASolutionObjective implements SolutionObjective {
         this.familiarity_total = 0;
     }
 
-    public void calculate() {
-        objective = distance_total * distance_weight + variance_total * customer_demand_weight + familiarity_total * familiarity_weight;
+    public double calculate() {
+        value = distance_total * distance_weight + variance_total * customer_demand_weight + familiarity_total * familiarity_weight;
+        return value;
     }
 
     public void updateVariance(Solution solution) {
@@ -96,6 +97,11 @@ public class BCASolutionObjective implements SolutionObjective {
         }
     }
 
+    public void updateVarianceAndCalculate(Solution solution) {
+        updateVariance(solution);
+        calculate();
+    }
+
     public void updateFamiliarity(Solution solution) {
         BCASolution bcaSolution = (BCASolution)solution;
         familiarity_total = 0;
@@ -103,10 +109,15 @@ public class BCASolutionObjective implements SolutionObjective {
             for (SolutionCluster cluster : vehicle.getClusters()) {
                 for (Long node_id : cluster.getNode_ids()) {
                     BCANode node = (BCANode)input.getNodeById(node_id);
-                    familiarity_total += node.getFamiliarity(vehicle.getVehicle_id());
+                    familiarity_total += node.getFamiliarity(vehicle.getVehicle_id()) - 1;
                 }
             }
         }
+    }
+
+    public void updateFamiliarityAndCalculate(Solution solution) {
+        updateFamiliarity(solution);
+        calculate();
     }
 
     public void updateDistance(Solution solution) {
@@ -123,13 +134,18 @@ public class BCASolutionObjective implements SolutionObjective {
         }
     }
 
+    public void updateDistanceAndCalculate(Solution solution) {
+        updateDistance(solution);
+        calculate();
+    }
 
-    public void update(Solution solution) {
+    public double update(Solution solution) {
         BCASolution bcaSolution = (BCASolution)solution;
         BCAInput bcaInput = (BCAInput)bcaSolution.getInput();
         variance_total = 0;
         familiarity_total = 0;
         distance_total = 0;
+
 
         double customer_average = bcaInput.getCustomer_average();
         double demand_average = bcaInput.getDemand_average();
@@ -138,37 +154,47 @@ public class BCASolutionObjective implements SolutionObjective {
         double customer_high = customer_average * (1 + bcaInput.getCustomer_bias());
         double demand_low = demand_average * (1 - bcaInput.getDemand_bias());
         double demand_high = demand_average * (1 + bcaInput.getDemand_bias());
+//        System.err.print(customer_low + " " + customer_high + " " + demand_low + " " + demand_high + " ");
         for (SolutionVehicle vehicle : bcaSolution.getVehicles()) {
             for (SolutionCluster cluster : vehicle.getClusters()) {
                 Long center_id = cluster.getCenter_id();
+                double cluster_customer_total = 0.0;
+                double cluster_demand_total = 0.0;
                 for (Long node_id : cluster.getNode_ids()) {
                     BCANode node = (BCANode)input.getNodeById(node_id);
 
                     double customer = node.getExpected_customers();
                     double demand = node.getExpected_demands();
-                    if (customer < customer_low) {
-                        variance_total += customer_low - customer;
-                    } else if (customer > customer_high) {
-                        variance_total += customer - customer_high;
-                    }
-                    if (demand < demand_low) {
-                        variance_total += demand_low - demand;
-                    } else if (demand > demand_high) {
-                        variance_total += demand - demand_high;
-                    }
+                    cluster_customer_total += customer;
+                    cluster_demand_total += demand;
 
-                    familiarity_total += node.getFamiliarity(vehicle.getVehicle_id());
+
+                    familiarity_total += node.getFamiliarity(vehicle.getVehicle_id()) - 1;
                     double distance = input.getNodeDistance(center_id, node_id);
                     distance_total += distance;
                 }
+                if (cluster_customer_total < customer_low) {
+                    variance_total += customer_low - cluster_customer_total;
+                } else if (cluster_customer_total > customer_high) {
+                    variance_total += cluster_customer_total - customer_high;
+                }
+
+                if (cluster_demand_total < demand_low) {
+                    variance_total += demand_low - cluster_demand_total;
+                } else if (cluster_demand_total > demand_high) {
+                    variance_total += cluster_demand_total - demand_high;
+                }
             }
         }
+//        System.err.println(" " + variance_total + " " + familiarity_total + " " + distance_total);
+        return calculate();
     }
+
 
     public SolutionObjective copy() {
         BCASolutionObjective clone = new BCASolutionObjective();
         clone.input = this.input;
-        clone.objective = this.objective;
+        clone.value = this.value;
 
         clone.customer_demand_weight = this.customer_demand_weight;
         clone.familiarity_weight = this.familiarity_weight;

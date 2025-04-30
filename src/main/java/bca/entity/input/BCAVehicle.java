@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -18,6 +19,16 @@ public class BCAVehicle implements Vehicle {
     public BCAVehicle(Long vehicle_id) {
         this.vehicle_id = vehicle_id;
         this.familiarities = new ArrayList<>();
+    }
+
+    public int getFamiliarity(Long node_id) {
+        if (node_id >= familiarities.size() || node_id < 0) {
+            return Integer.MAX_VALUE;
+        }
+        BCAFamiliarity familiarity = familiarities.get(node_id.intValue());
+        assert familiarity != null;
+        assert Objects.equals(familiarity.getNode_id(), node_id);
+        return familiarity.getFamiliarity();
     }
 
     public String toString() {

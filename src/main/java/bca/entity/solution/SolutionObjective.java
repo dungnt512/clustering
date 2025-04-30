@@ -1,8 +1,9 @@
 package bca.entity.solution;
 
 public interface SolutionObjective {
-    double getObjective();
-    void calculate();
-    void update(Solution solution);
+    double getValue();
+    @SuppressWarnings("UnusedReturnValue")
+    double calculate();
+    double update(Solution solution);
     SolutionObjective copy();
 }

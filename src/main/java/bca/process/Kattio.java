@@ -9,12 +9,17 @@ public class Kattio extends PrintWriter {
 
     // standard input
     public Kattio() { this(System.in, System.out); }
+    public Kattio(OutputStream o) {
+        super(o);
+        r = null;
+    }
     public Kattio(InputStream i, OutputStream o) {
         super(o);
         r = new BufferedReader(new InputStreamReader(i));
     }
     public Kattio(String inputFile) throws IOException {
         super(System.out);
+//        System.err.println("Reading from file: " + inputFile);
         try {
             r = new BufferedReader(new FileReader(inputFile));
         }
@@ -23,7 +28,16 @@ public class Kattio extends PrintWriter {
             throw e;
         }
     }
-
+    public Kattio(String inputFile, String outputFile) throws IOException {
+        super(outputFile != null ? (new BufferedOutputStream(new FileOutputStream(outputFile))) : System.out);
+        try {
+            r = inputFile != null ? new BufferedReader(new FileReader(inputFile)) : null;
+        }
+        catch (IOException e) {
+            System.err.println(e.getMessage());
+            throw e;
+        }
+    }
     public String next() {
         try {
             while (st == null || !st.hasMoreTokens())

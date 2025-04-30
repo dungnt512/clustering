@@ -1,0 +1,101 @@
+solution : {
+	objective : {
+		value : 0.0
+		variance : 0.0
+		familiarity : 0
+		distance : 0.0
+	}
+	vehicles : [
+		{
+			vehicle_id : 0
+			clusters : [
+				{
+					cluster_id : 0
+					node_ids : []
+				}
+			]
+		}
+		{
+			vehicle_id : 1
+			clusters : [
+				{
+					cluster_id : 1
+					node_ids : []
+				}
+			]
+		}
+		{
+			vehicle_id : 2
+			clusters : [
+				{
+					cluster_id : 2
+					node_ids : []
+				}
+			]
+		}
+		{
+			vehicle_id : 3
+			clusters : [
+				{
+					cluster_id : 3
+					node_ids : []
+				}
+			]
+		}
+		{
+			vehicle_id : 4
+			clusters : [
+				{
+					cluster_id : 4
+					node_ids : []
+				}
+			]
+		}
+		{
+			vehicle_id : 5
+			clusters : [
+				{
+					cluster_id : 5
+					node_ids : []
+				}
+			]
+		}
+		{
+			vehicle_id : 6
+			clusters : [
+				{
+					cluster_id : 6
+					node_ids : []
+				}
+			]
+		}
+		{
+			vehicle_id : 7
+			clusters : [
+				{
+					cluster_id : 7
+					node_ids : []
+				}
+			]
+		}
+		{
+			vehicle_id : 8
+			clusters : [
+				{
+					cluster_id : 8
+					node_ids : []
+				}
+			]
+		}
+		{
+			vehicle_id : 9
+			clusters : [
+				{
+					cluster_id : 9
+					node_ids : []
+				}
+			]
+		}
+	]
+}
+
