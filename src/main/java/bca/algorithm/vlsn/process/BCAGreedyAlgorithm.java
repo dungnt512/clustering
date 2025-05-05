@@ -82,6 +82,7 @@ public class BCAGreedyAlgorithm implements GreedyAlgorithm {
                 Long vehicle_id = best_vehicles.get(i);
                 Long center_id = centers.get(i);
                 List<Long> node_ids = cluster_node_ids.get(i);
+
                 SolutionCluster cluster = solution.getSolutionClusterById(vehicle_id);
                 current_center_ids.add(cluster.getCenter_id());
                 cluster.setCenter_id(center_id);

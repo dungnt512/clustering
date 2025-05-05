@@ -1,5 +1,6 @@
 package bca;
 
+import bca.algorithm.vlsn.operator.QAPNeighborhoodSearch;
 import bca.algorithm.vlsn.process.BCAGreedyAlgorithm;
 import bca.algorithm.vlsn.process.GreedyAlgorithm;
 import bca.entity.input.BCAInput;
@@ -27,7 +28,10 @@ public class Main {
                         file.getPath().replace(".dat", ".out"));
                 kattio.println(solution);
 //                System.out.println(input);
-                System.err.println(solution);
+//                System.err.println(solution);
+                QAPNeighborhoodSearch qapNeighborhoodSearch = new QAPNeighborhoodSearch(kattio);
+                qapNeighborhoodSearch.solve(solution, input);
+                kattio.println(solution);
                 kattio.close();
                 break;
             }

@@ -8,4 +8,6 @@ public interface Solution {
     Solution copy();
     SolutionVehicle getSolutionVehicleById(Long vehicle_id);
     SolutionCluster getSolutionClusterById(Long cluster_id);
+    boolean isValid();
+    boolean isConnected(Long cluster_id);
 }

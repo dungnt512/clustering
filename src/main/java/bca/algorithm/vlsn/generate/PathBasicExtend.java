@@ -18,9 +18,10 @@ public class PathBasicExtend implements PathExtend {
 
     @SuppressWarnings("DuplicatedCode")
     @Override
-    public List<List<Long>> extend(List<List<Long>> paths) {
+    public List<List<Long>> extend(List<List<Long>> paths, List<Double> deltas) {
         List<List<Long>> extended_paths = new ArrayList<>();
         HashMap<Long, Boolean> visited = new HashMap<>();
+
         for (List<Long> path : paths) {
             visited.clear();
             for (Long node_id: path) {
@@ -37,4 +38,5 @@ public class PathBasicExtend implements PathExtend {
         }
         return extended_paths;
     }
+
 }

@@ -1,16 +1,16 @@
 package bca.entity.solution;
 
+import bca.entity.input.Edge;
 import bca.entity.input.Input;
 
+import bca.entity.input.Node;
 import bca.entity.input.Vehicle;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 @Getter
 @Setter
@@ -41,6 +41,89 @@ public class BCASolution implements Solution {
         }
     }
 
+    private void DFS(Long node_id, HashMap<Long, Integer> visited) {
+        Node node = input.getNodeById(node_id);
+        visited.put(node_id, 2);
+        for (Long edge_id : node.getAdjacent_edges()) {
+            Edge edge = input.getEdgeById(edge_id);
+            Long next_node = edge.getRemaining(node.getNode_id());
+            int visit = visited.getOrDefault(next_node, 0);
+            if (visit == 1) {
+                DFS(next_node, visited);
+            }
+        }
+    }
+
+    private void BFS(Long node_id, HashMap<Long, Integer> visited) {
+        Queue<Long> queue = new LinkedList<>();
+        queue.add(node_id);
+        visited.put(node_id, 2);
+        while (!queue.isEmpty()) {
+            Long current_node = queue.poll();
+            Node node = input.getNodeById(current_node);
+            for (Long edge_id : node.getAdjacent_edges()) {
+                Edge edge = input.getEdgeById(edge_id);
+                Long next_node = edge.getRemaining(node.getNode_id());
+                int visit = visited.getOrDefault(next_node, 0);
+                if (visit == 1) {
+                    visited.put(next_node, 2);
+                    queue.add(next_node);
+                }
+            }
+        }
+    }
+
+    public boolean isValid() {
+        int num_nodes = input.getNum_nodes();
+        HashMap<Long, Integer> visited = new HashMap<>();
+        for (SolutionVehicle vehicle : vehicles) {
+            for (SolutionCluster cluster : vehicle.getClusters()) {
+                for (Long node_id : cluster.getNode_ids()) {
+                    if (visited.containsKey(node_id)) {
+                        return false;
+                    }
+                }
+
+                for (Long node_id : cluster.getNode_ids()) {
+                    BFS(node_id, visited);
+                    break;
+                }
+
+                for (Long node_id : cluster.getNode_ids()) {
+                    if (!visited.containsKey(node_id)) {
+                        return false;
+                    }
+                }
+                num_nodes -= visited.size();
+                if (num_nodes < 0) {
+                    return false;
+                }
+            }
+        }
+        return num_nodes == 0;
+    }
+
+    public boolean isConnected(Long cluster_id) {
+        return isConnected(getSolutionClusterById(cluster_id));
+    }
+    public boolean isConnected(SolutionCluster cluster) {
+        if (cluster == null) {
+            return false;
+        }
+        HashMap<Long, Integer> visited = new HashMap<>();
+        for (Long node_id : cluster.getNode_ids()) {
+            visited.put(node_id, 1);
+        }
+        BFS(cluster.getCenter_id(), visited);
+        for (Long node_id : cluster.getNode_ids()) {
+            int visit = visited.getOrDefault(node_id, 0);
+            if (visit != 2) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public Solution copy() {
         BCASolution clone = new BCASolution();
         clone.input = this.input;
@@ -69,20 +152,21 @@ public class BCASolution implements Solution {
     public String toString() {
         StringBuilder str = new StringBuilder("solution : {\n");
         str.append("\tobjective : {\n" + "\t\tvalue : ").
-                append(objective.getValue()).append("\n").
-                append("\t\tvariance : ").append(((BCASolutionObjective) objective).getVariance_total()).append("\n").
-                append("\t\tfamiliarity : ").append(((BCASolutionObjective) objective).getFamiliarity_total()).append("\n").
-                append("\t\tdistance : ").append(((BCASolutionObjective) objective).getDistance_total()).append("\n");
-        str.append("\t}\n");
+                append(objective.getValue()).append(",\n").
+                append("\t\tvariance : ").append(((BCASolutionObjective) objective).getVariance_total()).append(",\n").
+                append("\t\tfamiliarity : ").append(((BCASolutionObjective) objective).getFamiliarity_total()).append(",\n").
+                append("\t\tdistance : ").append(((BCASolutionObjective) objective).getDistance_total()).append(",\n");
+        str.append("\t},\n");
 
         str.append("\tvehicles : [\n");
         for (SolutionVehicle vehicle : vehicles) {
             str.append("\t\t{\n");
-            str.append("\t\t\tvehicle_id : ").append(vehicle.getVehicle_id()).append("\n");
+            str.append("\t\t\tvehicle_id : ").append(vehicle.getVehicle_id()).append(",\n");
             str.append("\t\t\tclusters : [\n");
             for (SolutionCluster cluster : vehicle.getClusters()) {
                 str.append("\t\t\t\t{\n");
-                str.append("\t\t\t\t\tcluster_id : ").append(cluster.getCluster_id()).append("\n");
+                str.append("\t\t\t\t\tcluster_id : ").append(cluster.getCluster_id()).append(",\n");
+                str.append("\t\t\t\t\tcenter_id : ").append(cluster.getCenter_id()).append(",\n");
                 str.append("\t\t\t\t\tnode_ids : [");
                 for (Long node_id : cluster.getNode_ids()) {
                     str.append(node_id).append(", ");

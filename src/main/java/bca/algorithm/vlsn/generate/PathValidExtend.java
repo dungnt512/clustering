@@ -16,7 +16,7 @@ public class PathValidExtend extends PathBasicExtend {
     }
 
     @Override
-    public List<List<Long>> extend(List<List<Long>> paths) {
+    public List<List<Long>> extend(List<List<Long>> paths, List<Double> deltas) {
         List<List<Long>> extended_paths = new ArrayList<>();
         HashMap<Long, Boolean> visited = new HashMap<>();
         for (List<Long> path : paths) {
