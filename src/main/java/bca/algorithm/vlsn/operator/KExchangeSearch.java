@@ -62,14 +62,16 @@ public class KExchangeSearch {
             List<Double> deltas = new ArrayList<>();
             List<List<Long>> extendedPaths = pathExtend.extend(pathSet, deltas);
             System.err.println("Iteration " + k + " extendedPaths size: " + extendedPaths.size() + "\n");
-            for (int i = 0; i < extendedPaths.size(); i++) {
-                List<Long> path = extendedPaths.get(i);
-                List<Long> cluster_id = new ArrayList<>();
-                for (Long nodeId : path) {
-                    cluster_id.add(node_cluster_map.getOrDefault(nodeId, null));
-                }
+//            if (k > 2)
+            {
+                for (List<Long> path : extendedPaths) {
+                    List<Long> cluster_id = new ArrayList<>();
+                    for (Long nodeId : path) {
+                        cluster_id.add(node_cluster_map.getOrDefault(nodeId, null));
+                    }
 //                double delta = solution.getObjective().updateCluster(solution, cluster_id, path) - currentObj;
-                double delta = solution.getObjective().updateCluster(solution, cluster_id, path);
+                    double delta = solution.getObjective().updateCluster(solution, cluster_id, path);
+//                    double delta = -1;
 
 //                System.err.print("[" + i + ": ");
 //                for (Long nodeId : path)
@@ -110,12 +112,18 @@ public class KExchangeSearch {
 //                    solution.getObjective().updateCluster(solution, firstClusterId, inserted, removed);
 //                }
 
-                deltas.add(delta);
-                if (Double.compare(delta, weight_delta) < 0) {
-                    weight_delta = delta;
-                    exchange = path;
+                    deltas.add(delta);
+                    if (Double.compare(delta, weight_delta) < 0) {
+                        weight_delta = delta;
+                        exchange = path;
+                    }
                 }
             }
+//            else {
+//                for (List<Long> path : extendedPaths) {
+//                    deltas.add(0.);
+//                }
+//            }
 //            System.err.println();
 
 
@@ -125,7 +133,7 @@ public class KExchangeSearch {
             }
             indices.sort(Comparator.comparingDouble(deltas::get));
             pathSet.clear();
-            for (int i = 0; i < indices.size() && i < num_node; i++) {
+            for (int i = 0; i < indices.size() && i < num_node * 5; i++) {
                 int index = indices.get(i);
                 pathSet.add(extendedPaths.get(index));
 //                deltas.add(deltas.get(index));
@@ -133,33 +141,64 @@ public class KExchangeSearch {
 //            deltas.subList(0, indices.size() - 1).clear();
 //            assert(deltas.size() == pathSet.size());
         }
-
+        System.err.println(weight_delta);
         return exchange;
     }
 
     public void move(List<Long> path) {
 //        for (Long node_id : path) {
         Long last_cluster_id = node_cluster_map.getOrDefault(path.getLast(), null);
+//        for (Long node_id : path) {
+//            Long cluster_id = node_cluster_map.getOrDefault(node_id, null);
+//            SolutionCluster cluster = solution.getSolutionClusterById(cluster_id);
+//            System.err.print("[");
+//            for (Long id : cluster.getNode_ids()) {
+//                System.err.print(id + " ");
+//            }
+//            System.err.println("]");
+//        }
+//        System.err.println();
+        boolean isSame = false;
         for (int i = 0; i < path.size(); i++) {
             Long node_id = path.get(i);
             Long prev_node_id = path.get(i > 0 ? i - 1 : path.size() - 1);
             Long cluster_id = i + 1 < path.size() ? node_cluster_map.getOrDefault(node_id, null) : last_cluster_id;
-            if (cluster_id == null) {
-                System.err.println("cluster_id is null");
-            }
+
+//            System.err.print(cluster_id + " ");
             SolutionCluster cluster = solution.getSolutionClusterById(cluster_id);
-            System.err.print(cluster_id + " ");
-            if (cluster == null) {
-                System.err.println("cluster is null");
+
+            if (i + 1 < path.size() || !isSame) {
+                cluster.getNode_ids().remove(node_id);
             }
-            assert cluster != null;
-            cluster.getNode_ids().remove(node_id);
-            cluster.getNode_ids().add(prev_node_id);
+            if (!cluster.getNode_ids().contains(prev_node_id)) {
+               cluster.getNode_ids().add(prev_node_id);
+            }
+            else {
+                isSame = true;
+            }
             node_cluster_map.put(prev_node_id, cluster_id);
         }
-        System.err.println();
-        for (Long node_id : path) System.err.print(node_cluster_map.getOrDefault(node_id, null) + " ");
-        System.err.println();
+//        System.err.println();
+
+//        for (Long node_id : path) System.err.print(node_cluster_map.getOrDefault(node_id, null) + " ");
+//        System.err.println();
+//        for (Long node_id : path) {
+//            Long cluster_id = node_cluster_map.getOrDefault(node_id, null);
+//            SolutionCluster cluster = solution.getSolutionClusterById(cluster_id);
+//            System.err.print(cluster.getNode_ids().contains(node_id) + " ");
+//        }
+//        System.err.println();
+//        for (Long node_id : path) {
+//            Long cluster_id = node_cluster_map.getOrDefault(node_id, null);
+//            SolutionCluster cluster = solution.getSolutionClusterById(cluster_id);
+//            System.err.print("[");
+//            for (Long id : cluster.getNode_ids()) {
+//                System.err.print(id + " ");
+//            }
+//            System.err.println("]");
+//        }
+//        System.err.println();
+        solution.findBestCenter();
         solution.getObjective().update(solution);
     }
 }

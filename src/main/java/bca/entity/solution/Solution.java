@@ -10,4 +10,5 @@ public interface Solution {
     SolutionCluster getSolutionClusterById(Long cluster_id);
     boolean isValid();
     boolean isConnected(Long cluster_id);
+    void findBestCenter();
 }

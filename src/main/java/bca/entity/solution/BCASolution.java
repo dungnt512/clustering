@@ -103,6 +103,29 @@ public class BCASolution implements Solution {
         return num_nodes == 0;
     }
 
+    public void findBestCenter() {
+        for (SolutionVehicle vehicle : vehicles) {
+            for (SolutionCluster cluster : vehicle.getClusters()) {
+                if (cluster.getNode_ids().isEmpty()) {
+                    continue;
+                }
+                double min_distance = Double.MAX_VALUE;
+                Long best_center = null;
+                for (Long node_id : cluster.getNode_ids()) {
+                    double distance = 0;
+                    for (Long node_id2 : cluster.getNode_ids()) {
+                        distance += input.getNodeDistance(node_id, node_id2);
+                    }
+                    if (distance < min_distance) {
+                        min_distance = distance;
+                        best_center = node_id;
+                    }
+                }
+                cluster.setCenter_id(best_center);
+            }
+        }
+    }
+
     public boolean isConnected(Long cluster_id) {
         return isConnected(getSolutionClusterById(cluster_id));
     }

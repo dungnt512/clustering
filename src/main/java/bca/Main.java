@@ -19,6 +19,7 @@ public class Main {
             if (file.isFile() && file.getName().endsWith(".dat")) {
 //                System.out.println("Processing file: " + file.getName() + " " + file.getParent() + " " + file.getAbsolutePath() + " " + file.getPath());
                 System.err.println("Processing file: " + file.getPath());
+                long startTime = System.currentTimeMillis();
                 Input input = new BCAInput(file.getPath(), true);
 //                System.err.println(input);
                 GreedyAlgorithm greedyAlgorithm = new BCAGreedyAlgorithm(100);
@@ -32,6 +33,7 @@ public class Main {
                 QAPNeighborhoodSearch qapNeighborhoodSearch = new QAPNeighborhoodSearch(kattio);
                 qapNeighborhoodSearch.solve(solution, input);
                 kattio.println(solution);
+                kattio.println("Time: " + (System.currentTimeMillis() - startTime) + "ms");
                 kattio.close();
                 break;
             }

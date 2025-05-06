@@ -16,8 +16,11 @@ public class QAPNeighborhoodSearch {
     public void solve(Solution solution /*initial greedy solution*/, Input input) {
         KExchangeSearch kExchangeSearch = new KExchangeSearch(5, input, solution);
         List<Long> kExchanges = new ArrayList<>();
+//        System.err.println(solution);
+//        solution.getObjective().update(solution);
         kattio.println(solution.getObjective());
         System.err.println(solution.getObjective());
+        long startTime = System.currentTimeMillis();
         while ((kExchanges = kExchangeSearch.search()) != null) {
             kExchangeSearch.move(kExchanges);
             System.err.print("\nkExchanges : [");
@@ -25,6 +28,9 @@ public class QAPNeighborhoodSearch {
             System.err.println("]");
             System.err.println(solution.getObjective());
             kattio.println(solution.getObjective());
+            long currentTime = System.currentTimeMillis();
+            kattio.println("Running: " + (currentTime - startTime) + "ms");
+            startTime = currentTime;
         }
     }
 }

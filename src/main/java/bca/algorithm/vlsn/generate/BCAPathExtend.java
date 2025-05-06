@@ -43,7 +43,7 @@ public class BCAPathExtend extends PathBasicExtend implements PathExtend {
     public List<List<Long>> extend(List<List<Long>> paths, List<Double> deltas) {
         List<List<Long>> extendedPaths = new ArrayList<>();
         HashMap<Long, Boolean> visited = new HashMap<>();
-        int i = 0;
+//        int i = 0;
 //        List<Double> old_deltas = new ArrayList<>(deltas);
 //        deltas.clear();
         for (List<Long> path : paths) {
@@ -59,25 +59,29 @@ public class BCAPathExtend extends PathBasicExtend implements PathExtend {
                 if (nodeId.compareTo(path.getFirst()) > 0 && lastClusterId.longValue() != nextClusterId.longValue() && !visited.containsKey(nodeId)) {
                     SolutionCluster cluster = solution.getSolutionClusterById(nextClusterId);
 
-                    cluster.getNode_ids().remove(nodeId);
-                    cluster.getNode_ids().add(path.getLast());
-                    firstCluster.getNode_ids().remove(path.getFirst());
-                    firstCluster.getNode_ids().add(nodeId);
+                    if (nextClusterId.longValue() != firstClusterId.longValue()) {
+                        cluster.getNode_ids().remove(nodeId);
+                        cluster.getNode_ids().add(path.getLast());
+                        firstCluster.getNode_ids().remove(path.getFirst());
+                        firstCluster.getNode_ids().add(nodeId);
+                    }
 
-                    if (solution.isConnected(nextClusterId) && solution.isConnected(firstClusterId)) {
+                    if (nextClusterId.longValue() == firstClusterId.longValue() || solution.isConnected(nextClusterId) && solution.isConnected(firstClusterId)) {
                         List<Long> extendedPath = new ArrayList<>(path);
                         extendedPath.add(nodeId);
                         extendedPaths.add(extendedPath);
 //                        deltas.add(old_deltas.get(i));
                     }
 
-                    cluster.getNode_ids().add(nodeId);
-                    cluster.getNode_ids().remove(path.getLast());
-                    firstCluster.getNode_ids().add(path.getFirst());
-                    firstCluster.getNode_ids().remove(nodeId);
+                    if (firstClusterId.longValue() != nextClusterId.longValue()) {
+                        cluster.getNode_ids().add(nodeId);
+                        cluster.getNode_ids().remove(path.getLast());
+                        firstCluster.getNode_ids().add(path.getFirst());
+                        firstCluster.getNode_ids().remove(nodeId);
+                    }
                 }
             }
-            i++;
+//            i++;
         }
         return extendedPaths;
     }

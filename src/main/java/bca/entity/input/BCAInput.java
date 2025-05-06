@@ -185,11 +185,24 @@ public class BCAInput implements Input {
             to_node.getAdjacent_edges().add(edge.getEdge_id());
         }
 
-        if (flag) {
-            if ((long) ((num_edges + num_nodes) * Math.log(num_nodes) / Math.log(2)) < (long) num_nodes * num_nodes * num_nodes) {
-                Dijkstra();
-            } else {
-                Floyd();
+//        if (flag) {
+//            if ((long) ((num_edges + num_nodes) * Math.log(num_nodes) / Math.log(2)) < (long) num_nodes * num_nodes * num_nodes) {
+//                Dijkstra();
+//            } else {
+//                Floyd();
+//            }
+//        }
+
+
+        initDistance();
+        for (Node node : nodes) {
+            for (Node other_node : nodes) {
+                if (node.getNode_id().equals(other_node.getNode_id())) {
+                    continue;
+                }
+                double distance = EuclidianDistance.euclideanDistance(((BCANode)node).getLatitude(), ((BCANode)node).getLongitude(),
+                        ((BCANode)other_node).getLatitude(), ((BCANode)other_node).getLongitude());
+                distances.get(node.getNode_id()).put(other_node.getNode_id(), distance);
             }
         }
         kattio.close();
