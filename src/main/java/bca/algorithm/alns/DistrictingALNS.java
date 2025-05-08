@@ -1,3 +1,5 @@
+package bca.algorithm.alns;
+
 import java.util.StringTokenizer;
 import java.io.BufferedReader;
 import java.io.BufferedOutputStream;
@@ -290,7 +292,9 @@ public class DistrictingALNS {
         try {
             io = new Kattio("");
         }
-        catch (IOException _) {}
+        catch (IOException e) {
+            e.printStackTrace();          
+        }
     }
     static int n, m, numberDrivers, numberClusters;
     static double[] tolarance, average;

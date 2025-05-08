@@ -1,0 +1,131 @@
+Solution
+Cluster 0: 178(0) 83(1) 133(2) 29(3) 194(4) 40(5) 190(6) 117(7) 39(8) 105(9) 11(10) 154(11) 35(12) 61(13) 191(14) 149(15) 172(16) 76(17) 68(18) 86(19) 
+Cluster 1: 66(0) 77(1) 130(2) 0(3) 188(4) 168(5) 115(6) 163(7) 59(8) 134(9) 57(10) 32(11) 118(12) 186(13) 146(14) 135(15) 21(16) 49(17) 157(18) 
+Cluster 2: 176(0) 36(1) 152(2) 122(3) 79(4) 60(5) 70(6) 193(7) 17(8) 121(9) 52(10) 33(11) 42(12) 153(13) 91(14) 148(15) 81(16) 164(17) 
+Cluster 3: 182(0) 181(1) 93(2) 22(3) 98(4) 198(5) 109(6) 4(7) 63(8) 141(9) 138(10) 169(11) 136(12) 175(13) 95(14) 110(15) 97(16) 120(17) 82(18) 170(19) 114(20) 184(21) 20(22) 
+Cluster 4: 12(0) 72(1) 1(2) 108(3) 199(4) 47(5) 9(6) 140(7) 34(8) 51(9) 129(10) 142(11) 101(12) 31(13) 111(14) 53(15) 64(16) 125(17) 46(18) 92(19) 128(20) 
+Cluster 5: 189(0) 171(1) 65(2) 187(3) 161(4) 126(5) 2(6) 94(7) 196(8) 45(9) 78(10) 28(11) 27(12) 25(13) 54(14) 69(15) 44(16) 159(17) 41(18) 
+Cluster 6: 5(0) 8(1) 73(2) 174(3) 24(4) 87(5) 104(6) 180(7) 18(8) 58(9) 139(10) 150(11) 6(12) 62(13) 192(14) 144(15) 147(16) 14(17) 103(18) 3(19) 75(20) 
+Cluster 7: 179(0) 80(1) 100(2) 151(3) 38(4) 90(5) 50(6) 167(7) 107(8) 113(9) 84(10) 166(11) 88(12) 123(13) 158(14) 37(15) 143(16) 177(17) 124(18) 185(19) 
+Cluster 8: 48(0) 197(1) 137(2) 162(3) 96(4) 85(5) 30(6) 145(7) 71(8) 160(9) 10(10) 116(11) 74(12) 102(13) 99(14) 7(15) 156(16) 132(17) 106(18) 
+Cluster 9: 89(0) 43(1) 112(2) 16(3) 67(4) 55(5) 19(6) 195(7) 131(8) 13(9) 165(10) 15(11) 173(12) 56(13) 26(14) 119(15) 23(16) 183(17) 127(18) 155(19) 
+Check number nodes: OK
+Check connected: OK
+Cluster 0 :
+sumCExpectationValue = 0.0 - 0.0
+sumFamiliarityDeviation = 23 - 23
+minDispersion = 2930.3720180323335 - 2930.3720180323335
+totalCostOfCluster = 0.0
+Cluster 1 :
+sumCExpectationValue = 0.0 - 0.0
+sumFamiliarityDeviation = 19 - 19
+minDispersion = 2656.2392664366866 - 2656.2392664366866
+totalCostOfCluster = 0.0
+Cluster 2 :
+sumCExpectationValue = 2.0690738116735474 - 2.0690738116735474
+sumFamiliarityDeviation = 18 - 18
+minDispersion = 2158.416164357676 - 2158.416164357676
+totalCostOfCluster = 0.0
+Cluster 3 :
+sumCExpectationValue = 1.2095045478834336 - 1.2095045478834336
+sumFamiliarityDeviation = 30 - 30
+minDispersion = 3843.740902393571 - 3843.740902393571
+totalCostOfCluster = 0.0
+Cluster 4 :
+sumCExpectationValue = 3.311165899423905 - 3.311165899423905
+sumFamiliarityDeviation = 20 - 20
+minDispersion = 3863.879744336578 - 3863.879744336578
+totalCostOfCluster = 0.0
+Cluster 5 :
+sumCExpectationValue = 0.0 - 0.0
+sumFamiliarityDeviation = 20 - 20
+minDispersion = 3327.599244549214 - 3327.599244549214
+totalCostOfCluster = 0.0
+Cluster 6 :
+sumCExpectationValue = 0.8238946000433884 - 0.8238946000433884
+sumFamiliarityDeviation = 19 - 19
+minDispersion = 2698.678319944685 - 2698.678319944685
+totalCostOfCluster = 0.0
+Cluster 7 :
+sumCExpectationValue = 1.1481346281205163 - 1.1481346281205163
+sumFamiliarityDeviation = 25 - 25
+minDispersion = 3159.0939853915156 - 3159.0939853915156
+totalCostOfCluster = 0.0
+Cluster 8 :
+sumCExpectationValue = 7.612968970221111 - 7.612968970221111
+sumFamiliarityDeviation = 21 - 21
+minDispersion = 2660.3447214870444 - 2660.3447214870444
+totalCostOfCluster = 0.0
+Cluster 9 :
+sumCExpectationValue = 4.207300328914599 - 4.207300328914599
+sumFamiliarityDeviation = 15 - 15
+minDispersion = 2887.50771355927 - 2887.50771355927
+totalCostOfCluster = 0.0
+totalCost: 155567.91486676908 - 155567.91486676908
+----------------------------------
+Solution
+Cluster 0: 83(1) 29(3) 194(4) 40(5) 190(6) 39(8) 105(9) 154(11) 61(13) 191(14) 149(15) 172(16) 76(17) 68(18) 
+Cluster 1: 77(1) 130(2) 0(3) 115(6) 59(8) 134(9) 57(10) 32(11) 118(12) 186(13) 146(14) 135(15) 21(16) 49(17) 157(18) 
+Cluster 2: 176(0) 36(1) 152(2) 122(3) 79(4) 60(5) 193(7) 17(8) 121(9) 52(10) 33(11) 42(12) 153(13) 91(14) 148(15) 164(17) 
+Cluster 3: 182(0) 181(1) 93(2) 22(3) 98(4) 198(5) 109(6) 4(7) 141(9) 138(10) 169(11) 136(12) 175(13) 110(15) 97(16) 120(17) 82(18) 170(19) 114(20) 184(21) 20(22) 
+Cluster 4: 12(0) 72(1) 1(2) 108(3) 47(5) 9(6) 140(7) 34(8) 51(9) 129(10) 101(12) 31(13) 111(14) 53(15) 64(16) 125(17) 46(18) 92(19) 128(20) 
+Cluster 5: 189(0) 171(1) 187(3) 161(4) 126(5) 2(6) 94(7) 78(10) 28(11) 27(12) 25(13) 54(14) 44(16) 159(17) 41(18) 
+Cluster 6: 5(0) 73(2) 24(4) 87(5) 104(6) 180(7) 18(8) 58(9) 139(10) 150(11) 6(12) 62(13) 147(16) 14(17) 103(18) 3(19) 75(20) 
+Cluster 7: 179(0) 80(1) 100(2) 151(3) 38(4) 90(5) 50(6) 167(7) 84(10) 166(11) 88(12) 158(14) 37(15) 143(16) 177(17) 124(18) 
+Cluster 8: 48(0) 197(1) 137(2) 162(3) 96(4) 85(5) 145(7) 71(8) 160(9) 10(10) 74(12) 102(13) 99(14) 7(15) 156(16) 132(17) 106(18) 
+Cluster 9: 43(1) 112(2) 16(3) 67(4) 55(5) 19(6) 195(7) 131(8) 13(9) 165(10) 15(11) 173(12) 56(13) 26(14) 23(16) 183(17) 127(18) 155(19) 
+Check number nodes: OK
+Check connected: OK
+Cluster 0 :
+sumCExpectationValue = 43.20058131712523 - 43.20058131712523
+sumFamiliarityDeviation = 17 - 17
+minDispersion = 1956.977620381309 - 1956.9776203813094
+totalCostOfCluster = 0.0
+Cluster 1 :
+sumCExpectationValue = 21.706322752472545 - 21.706322752472516
+sumFamiliarityDeviation = 13 - 13
+minDispersion = 2139.606329683673 - 2139.6063296836733
+totalCostOfCluster = 2.9103830456733704E-11
+Cluster 2 :
+sumCExpectationValue = 15.00272146864895 - 15.002721468648964
+sumFamiliarityDeviation = 17 - 17
+minDispersion = 1725.8639034836062 - 1725.8639034836065
+totalCostOfCluster = -1.4551915228366852E-11
+Cluster 3 :
+sumCExpectationValue = 3.866222542044241 - 3.866222542044241
+sumFamiliarityDeviation = 27 - 27
+minDispersion = 3672.9816383862994 - 3672.9816383862994
+totalCostOfCluster = 0.0
+Cluster 4 :
+sumCExpectationValue = 17.164150041347966 - 17.164150041347938
+sumFamiliarityDeviation = 16 - 16
+minDispersion = 3704.9365055942594 - 3704.93650559426
+totalCostOfCluster = 2.546585164964199E-11
+Cluster 5 :
+sumCExpectationValue = 36.53265829454267 - 36.53265829454271
+sumFamiliarityDeviation = 16 - 16
+minDispersion = 2775.919937415438 - 2775.9199374154387
+totalCostOfCluster = -4.3655745685100555E-11
+Cluster 6 :
+sumCExpectationValue = 24.579069465199126 - 24.579069465199126
+sumFamiliarityDeviation = 13 - 13
+minDispersion = 2535.240114335266 - 2535.2401143352663
+totalCostOfCluster = 0.0
+Cluster 7 :
+sumCExpectationValue = 33.02959671125554 - 33.02959671125558
+sumFamiliarityDeviation = 21 - 21
+minDispersion = 2364.037782506233 - 2364.037782506233
+totalCostOfCluster = -3.637978807091713E-11
+Cluster 8 :
+sumCExpectationValue = 15.242541570565031 - 15.24254157056501
+sumFamiliarityDeviation = 20 - 20
+minDispersion = 2256.2050946843283 - 2256.2050946843283
+totalCostOfCluster = 2.1827872842550278E-11
+Cluster 9 :
+sumCExpectationValue = 0.0 - 0.0
+sumFamiliarityDeviation = 13 - 13
+minDispersion = 2601.873668465679 - 2601.8736684656797
+totalCostOfCluster = 0.0
+totalCost: 322557.50675813743 - 322557.50675813743
+List node remove: 8 11 30 35 45 63 65 66 69 70 81 86 89 95 107 113 116 117 119 123 133 142 144 163 168 174 178 185 188 192 196 199 
+Number nodes remove: 32
