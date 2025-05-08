@@ -582,14 +582,16 @@ public class DistrictingALNS {
     //---------------------------------------------------------------------------------------------------
     static void worstRemoval(Solution solution) {
         int eta = rand(n / 10, n / 4);
-        int[] degree = new int[n];
+        int[] degree = new int[n],
+              parent = new int[n];
         Arrays.fill(degree, -1);
-        buildDegree(degree, solution);
+        Arrays.fill(parent, -1);
+        buildDegreeAndParent(degree, parent, solution);
         SegmentGetMinValue seg = new SegmentGetMinValue(n);
         updateSeg(seg, degree, solution);
         for (int time = 0; time < eta; time ++) {
             int idNode = seg.getPosMinValue(1, n, 1) - 1;
-            updateSegAfterRemoveNode(solution.nodes[idNode], seg, degree, solution);
+            updateSegAfterRemoveNode(solution.nodes[idNode], seg, degree, parent, solution);
         }
     }
     static void updateSeg(SegmentGetMinValue seg, int[] degree, Solution solution) {
@@ -604,24 +606,24 @@ public class DistrictingALNS {
                 seg.update(1, n, 1, idNode + 1, cluster.getNewTotalCostOfClusterAfterRemoveNode(solution.nodes[idNode], expectationValues, familiarity, solution.nodes, distance) - totalCostOfCluster);
         }
     }
-    static void updateSegAfterRemoveNode(Node node, SegmentGetMinValue seg, int[] degree, Solution solution) {
+    static void updateSegAfterRemoveNode(Node node, SegmentGetMinValue seg, int[] degree, int[] parent, Solution solution) {
         int idCluster = node.idCluster;
         solution.clusters[idCluster].updateClusterAfterRemoveNode(node, expectationValues, familiarity, solution.nodes, distance);
         seg.update(1, n, 1, node.id + 1, 1e9);
-        updateDegreeAfterRemoveNode(node.id, degree, solution);
+        updateDegreeAfterRemoveNode(node.id, degree, parent, solution);
         updateSegCluster(seg, degree, solution.clusters[idCluster], solution);
     }
-    static void buildDegree(int[] degree, Solution solution) {
+    static void buildDegreeAndParent(int[] degree, int[] parent, Solution solution) {
         for (int idCluster = 0; idCluster < numberClusters; idCluster ++)
-            buildDegreeOfCluster(degree, solution.clusters[idCluster], solution);
+            buildDegreeAndParentOfCluster(degree, parent, solution.clusters[idCluster], solution);
     }
-    static void buildDegreeOfCluster(int[] degree, Cluster cluster, Solution solution) {
+    static void buildDegreeAndParentOfCluster(int[] degree, int[] parent, Cluster cluster, Solution solution) {
         if (cluster.nodes.size() == 0)
             return;
         int root = cluster.nodes.get(rand(0, cluster.nodes.size() - 1));
-        bfsBuildDegree(root, degree, solution);
+        bfsBuildDegreeAndParent(root, degree, parent, solution);
     }
-    static void bfsBuildDegree(int root, int[] degree, Solution solution) {
+    static void bfsBuildDegreeAndParent(int root, int[] degree, int[] parent, Solution solution) {
         Queue <Integer> queue = new LinkedList <> ();
         degree[root] = 0;
         queue.add(root);
@@ -630,6 +632,7 @@ public class DistrictingALNS {
             for (int i = 0; i < adjacent.get(u).size(); i ++) {
                 int v = adjacent.get(u).get(i);
                 if (degree[v] == -1 && solution.nodes[v].idCluster == solution.nodes[u].idCluster) {
+                    parent[v] = u;
                     degree[u] ++;
                     degree[v] = 0;
                     queue.add(v);
@@ -637,13 +640,10 @@ public class DistrictingALNS {
             }
         }
     }
-    static void updateDegreeAfterRemoveNode(int u, int[] degree, Solution solution) {
-        degree[u] = -1;
-        for (int i = 0; i < adjacent.get(u).size(); i ++) {
-            int v = adjacent.get(u).get(i);
-            if (solution.nodes[v].idCluster == solution.nodes[u].idCluster && degree[v] != -1)
-                degree[v] --;
-        }
+    static void updateDegreeAfterRemoveNode(int u, int[] degree, int[] parent, Solution solution) {
+        degree[u] --;
+        if (parent[u] != -1)
+            degree[parent[u]] --;
     }
     //---------------------------------------------------------------------------------------------------
     static void checkSolution(Solution solution) {
