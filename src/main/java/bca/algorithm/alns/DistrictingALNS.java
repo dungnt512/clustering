@@ -10,15 +10,17 @@ import java.io.PrintWriter;
 import java.io.OutputStream;
 import java.io.FileReader;
 import java.util.List;
+import java.util.Queue;
 import java.util.Random;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 
-class Segment {
+class SegmentGetPos {
     int n;
     int[] tree;
-    Segment(int n) {
+    SegmentGetPos(int n) {
         this.n = n;
         tree = new int[4 * n + 1];
         Arrays.fill(tree, 0);
@@ -57,6 +59,38 @@ class Segment {
     }
 }
 
+class SegmentGetMinValue {
+    int n;
+    double[] tree;
+    SegmentGetMinValue(int n, int sizeTree) {
+        this.n = n;
+        tree = new double[sizeTree + 1];
+        Arrays.fill(tree, 1e9);
+    }
+    void update(int node, double val) {
+        tree[node] = val;
+        while (node > 1) {
+            node /= 2;
+            tree[node] = Math.min(tree[node * 2], tree[node * 2 + 1]);
+        }
+    }
+    int getPosMinValue() {
+        int l = 1, r = n, node = 1;
+        while (l < r) {
+            int mid = (l + r) / 2;
+            if (tree[node * 2] < tree[node * 2 + 1]) {
+                r = mid;
+                node = node * 2;
+            }
+            else {
+                l = mid + 1;
+                node = node * 2 + 1;
+            }
+        }
+        return l;
+    }
+}
+
 class Node {
     int id, idCluster, positionInCLuster;
     double x, y, dispersion;
@@ -68,6 +102,8 @@ class Node {
         this.c[0] = customers;
         this.c[1] = orders;
         this.dispersion = dispersion;
+        this.idCluster = -1;
+        this.positionInCLuster = -1;
     }
 }
 
@@ -116,12 +152,20 @@ class Cluster {
         totalCost += getNewMinDispersionAfterAddNode(node, listNode, distance);
         return totalCost;
     }
+    double getNewTotalCostOfClusterAfterRemoveNode(Node node, ExpectationValue[] expectationValues, int[][] familiarity, Node[] listNode, double[][] distance) {
+        double totalCost = 0;
+        totalCost += getNewSumCAfterRemoveNode(node, expectationValues) * 1000;
+        totalCost += getNewSumFamiliarityDeviationAfterRemoveNode(node, familiarity) * 500;
+        totalCost += getNewMinDispersionAfterRemoveNode(node, listNode, distance);
+        return totalCost;
+    }
     //---------------------------------------------------------------------------------------------------
     void updateClusterAfterAddNode(Node node, ExpectationValue[] expectationValues, int[][] familiarity, Node[] listNode, double[][] distance) {
         updateNewSumCAfterAddNode(node, expectationValues);
         updateNewSumFamiliarityDeviationAfterAddNode(node, familiarity);
         updateNewMinDispersionAfterAddNode(node, listNode, distance);
         node.idCluster = id;
+        node.positionInCLuster = nodes.size();
         nodes.add(node.id);
     }
     void updateClusterAfterRemoveNode(Node node, ExpectationValue[] expectationValues, int[][] familiarity, Node[] listNode, double[][] distance) {
@@ -131,6 +175,7 @@ class Cluster {
         updateNewSumFamiliarityDeviationAfterRemoveNode(node, familiarity);
         updateNewMinDispersionAfterRemoveNode(node, listNode, distance);
         node.idCluster = -1;
+        node.positionInCLuster = -1;
         Integer idNodeInteger = node.id;
         nodes.remove(idNodeInteger);
     }
@@ -147,7 +192,7 @@ class Cluster {
         int sizeNodes = nodes.size(), numberNodesCanChoose = 1,
             randomValue = rand(0, sizeNodes - 1);
         listNodesCanChoose.add(randomValue);
-        Segment seg = new Segment(sizeNodes);
+        SegmentGetPos seg = new SegmentGetPos(sizeNodes);
         seg.build(1, sizeNodes, 1);
         int[] visited = new int[sizeNodes],
               inListNodesCanChoose = new int[sizeNodes];
@@ -180,7 +225,7 @@ class Cluster {
         }
         return adj;
     }
-    int randomNodeInCLuster(int numberNodesCanChoose, List <Integer> listNodesCanChoose, Segment seg, int[] visited, int[] inListNodesCanChoose, List <List <Integer>> adj) {
+    int randomNodeInCLuster(int numberNodesCanChoose, List <Integer> listNodesCanChoose, SegmentGetPos seg, int[] visited, int[] inListNodesCanChoose, List <List <Integer>> adj) {
         int sizeNodes = nodes.size(),
             randomValue = seg.getPos(1, sizeNodes, 1, rand(1, numberNodesCanChoose)) - 1,
             idNode = listNodesCanChoose.get(randomValue),
@@ -202,6 +247,12 @@ class Cluster {
         double ans = 0;
         for (int type = 0; type < 2; type ++)
             ans += expectationValueOfCType(type, sumC[type] + node.c[type], expectationValues);
+        return ans;
+    }
+    double getNewSumCAfterRemoveNode(Node node, ExpectationValue[] expectationValues) {
+        double ans = 0;
+        for (int type = 0; type < 2; type ++)
+            ans += expectationValueOfCType(type, sumC[type] - node.c[type], expectationValues);
         return ans;
     }
     void updateNewSumCAfterAddNode(Node node, ExpectationValue[] expectationValues) {
@@ -230,6 +281,9 @@ class Cluster {
     double getNewSumFamiliarityDeviationAfterAddNode(Node node, int[][] familiarity) {
         return sumFamiliarityDeviation + familiarity[id][node.id] - 1;
     }
+    double getNewSumFamiliarityDeviationAfterRemoveNode(Node node, int[][] familiarity) {
+        return sumFamiliarityDeviation - familiarity[id][node.id] + 1;
+    }
     void updateNewSumFamiliarityDeviationAfterAddNode(Node node, int[][] familiarity) {
         sumFamiliarityDeviation += familiarity[id][node.id] - 1;
     }
@@ -245,6 +299,16 @@ class Cluster {
             ans = Math.min(ans, listNode[idNode].dispersion + distance[node.id][idNode]);
         }
         return Math.min(ans, dispersionNode);
+    }
+    double getNewMinDispersionAfterRemoveNode(Node node, Node[] listNode, double[][] distance) {
+        double ans = 1e9;
+        for (int i = 0; i < nodes.size(); i ++) {
+            int idNode = nodes.get(i);
+            if (idNode == node.id)
+                continue;
+            ans = Math.min(ans, listNode[idNode].dispersion - distance[node.id][idNode]);
+        }
+        return ans;
     }
     void updateNewMinDispersionAfterAddNode(Node node, Node[] listNode, double[][] distance) {
         minDispersion = 1e9;
@@ -284,6 +348,87 @@ class Cluster {
 class Solution {
     Node[] nodes;
     Cluster[] clusters;
+    Solution() {
+    }
+}
+
+class RegretK {
+    int k, numberClusters;
+    double[] totalCostOfCluster;
+    int[] bestClusterTotalCost;
+    RegretK(int k, int numberClusters) {
+        this.k = k;
+        this.numberClusters = numberClusters;
+        totalCostOfCluster = new double[numberClusters];
+        bestClusterTotalCost = new int[k];
+        Arrays.fill(totalCostOfCluster, 1e9);
+    }
+    void buildBestClusterTotalCost() {
+        Arrays.fill(bestClusterTotalCost, -1);
+        for (int idCluster = 0; idCluster < numberClusters; idCluster ++)
+            for (int i = 0; i < k; i ++)
+                if (bestClusterTotalCost[i] < 0 || totalCostOfCluster[idCluster] < totalCostOfCluster[bestClusterTotalCost[i]]) {
+                    for (int j = i + 1; j < k; j ++)
+                        bestClusterTotalCost[j] = bestClusterTotalCost[j - 1];
+                    bestClusterTotalCost[i] = idCluster;
+                    break;
+                }
+    }
+    double getRegret() {
+        double regret = 0;
+        for (int i = 1; i < k; i ++)
+            regret += totalCostOfCluster[bestClusterTotalCost[i]] - totalCostOfCluster[bestClusterTotalCost[0]];
+        return regret;
+    }
+}
+
+class Parameter {
+    int temperature, lowerNumberRequests, upperNumberRequests, sigma1, sigma2, sigma3, sigma4;
+    double coolingRate, lambda;
+    Parameter(int lowerNumberRequests, int upperNumberRequests) {
+        temperature = 10000;
+        coolingRate = 0.995;
+        this.lowerNumberRequests = lowerNumberRequests;
+        this.upperNumberRequests = upperNumberRequests;
+        sigma1 = 3;
+        sigma2 = 2;
+        sigma3 = 1;
+        sigma4 = -1;
+        lambda = 0.01;
+    }
+}
+
+class ParameterOfOperation {
+    int numberOperations;
+    double[] probabilityOperation;
+    int[] timesUsedOperation, scoreOperation;
+    ParameterOfOperation(int numberOperations) {
+        this.numberOperations = numberOperations;
+        probabilityOperation = new double[numberOperations];
+        timesUsedOperation = new int[numberOperations];
+        scoreOperation = new int[numberOperations];
+        Arrays.fill(probabilityOperation, 1.0 / numberOperations);
+        Arrays.fill(timesUsedOperation, 1);
+        Arrays.fill(scoreOperation, 0);
+    }
+    void updateProbabilityOperation(double lambda) {
+        for (int i = 0; i < numberOperations; i ++)
+            probabilityOperation[i] = Math.max(0.0, probabilityOperation[i] * (1 - lambda) + lambda * scoreOperation[i] / timesUsedOperation[i]);
+    }
+    int getOperation() {
+        double sum = 0;
+        for (int i = 0; i < numberOperations; i ++)
+            sum += probabilityOperation[i];
+        double randValue = Math.random() * sum;
+        for (int i = 0; i < numberOperations; i ++) {
+            randValue -= probabilityOperation[i];
+            if (randValue <= 0) {
+                timesUsedOperation[i] ++;
+                return i;
+            }
+        }
+        return -1;
+    }
 }
 
 public class DistrictingALNS {
@@ -303,28 +448,36 @@ public class DistrictingALNS {
     static boolean[][] connected;
     static Node[] nodes;
     static Edge[] edges;
-    static Cluster[] clusters;
     static ExpectationValue[] expectationValues;
     static List <List <Integer>> adjacent;
-    static Solution solutionCurrent, solutionBest;
+    static int[] posNodeInSegmentTree;
+    static Parameter parameter;
 
     public static void main(String args[]) {
         readInput();
         initAverageValues();
         buildDistanceMatrix();
-        buildInitialSolution();
-        checkSolution();
-        io.println("----------------------------------");
-        randomRemoval();
-        checkSolution();
-        io.print("List node remove: ");
-        int  numberNodesRemove = 0;
-        for (int i = 0; i < n; i ++)
-            if (nodes[i].idCluster < 0) {
-                io.print(i + " ");
-                numberNodesRemove ++;
-            }
-        io.println("\nNumber nodes remove: " + numberNodesRemove);
+        solve();
+        // Solution initialSolution = buildInitialSolution();
+        // checkSolution(initialSolution);
+        // io.println("----------------------------------");
+        // Solution solutionNew = copySolution(initialSolution);
+        // worstRemoval(solutionNew);
+        // checkSolution(solutionNew);
+        // List <Integer> listNodesNotInCluster = buildListNodesNotInCluster(solutionNew);
+        // io.print("List nodes not in cluster: ");
+        // for (int i = 0; i < listNodesNotInCluster.size(); i ++)
+        //     io.print(listNodesNotInCluster.get(i) + " ");
+        // io.println();
+        // io.println("Size list node remove: " + listNodesNotInCluster.size());
+        // regretKInsertion(solutionNew);
+        // checkSolution(solutionNew);
+        // listNodesNotInCluster = buildListNodesNotInCluster(solutionNew);
+        // io.print("List nodes not in cluster: ");
+        // for (int i = 0; i < listNodesNotInCluster.size(); i ++)
+        //     io.print(listNodesNotInCluster.get(i) + " ");
+        // io.println();
+        // io.println("Size list node remove: " + listNodesNotInCluster.size());
         io.close();
     }
     //---------------------------------------------------------------------------------------------------
@@ -365,29 +518,35 @@ public class DistrictingALNS {
         for (int i = 0; i < numberClusters; i ++)
             for (int j = 0; j < n; j ++)
                 familiarity[i][j] = io.getInt();
+        parameter = new Parameter(n / 10, n / 4);
+        posNodeInSegmentTree = new int[n + 1];
+        buildPosNodeInSegmentTree(1, n, 1);
     }
     //---------------------------------------------------------------------------------------------------
-    static void buildInitialSolution() {
-        clusters = new Cluster[numberClusters];
-        for (int i = 0; i < numberClusters; i ++)
-            clusters[i] = new Cluster(i, expectationValues);
-        List <Integer> listRandom = new ArrayList <> ();
-        for (int i = 0; i < n; i ++)
-            listRandom.add(i);
-        Collections.shuffle(listRandom);
-        for (int i = 0; i < n; i ++) {
-            int u = listRandom.get(i), idClusterBest = 0;
-            double bestTotalCost = 1e9, totalCostCurrent = getTotalCostCurrent();
-            for (int idCluster = 0; idCluster < numberClusters; idCluster ++) {
-                double totalCost = getNewTotalCostAfterAddNode(totalCostCurrent, nodes[u], clusters[idCluster]);
-                if (totalCost < bestTotalCost) {
-                    bestTotalCost = totalCost;
-                    idClusterBest = idCluster;
-                }
-            }
-            clusters[idClusterBest].updateClusterAfterAddNode(nodes[u], expectationValues, familiarity, nodes, distance);
+    static void buildPosNodeInSegmentTree(int l, int r, int node) {
+        if (l == r) {
+            posNodeInSegmentTree[l] = node;
+            return;
         }
-        updatePositionOfNodesInClusters();
+        int mid = (l + r) / 2;
+        buildPosNodeInSegmentTree(l, mid, node * 2);
+        buildPosNodeInSegmentTree(mid + 1, r, node * 2 + 1);
+    }
+    static int sizeSegmentTree(int size) {
+        int ans = posNodeInSegmentTree[size];
+        for (int i = 1; i < size; i ++)
+            ans = Math.max(ans, posNodeInSegmentTree[i]);
+        return ans;
+    }
+    //---------------------------------------------------------------------------------------------------
+    static Solution buildInitialSolution() {
+        Solution solutionCurrent = new Solution();
+        solutionCurrent.nodes = copyNode(nodes);
+        solutionCurrent.clusters = new Cluster[numberClusters];
+        for (int i = 0; i < numberClusters; i ++)
+            solutionCurrent.clusters[i] = new Cluster(i, expectationValues);
+        regretKInsertion(solutionCurrent);
+        return solutionCurrent;
     }
     //---------------------------------------------------------------------------------------------------
     static void buildDistanceMatrix() {
@@ -415,20 +574,23 @@ public class DistrictingALNS {
             expectationValues[type] = new ExpectationValue(average[type] - average[type] * tolarance[type], average[type] + average[type] * tolarance[type]);
     }
     //---------------------------------------------------------------------------------------------------
-    static void copySolution(Solution solutionSource, Solution solutionSink) {
-        copyNode(solutionSource.nodes, solutionSink.nodes);
-        copyCluster(solutionSource.clusters, solutionSink.clusters);
+    static Solution copySolution(Solution solutionSource) {
+        Solution solutionSink = new Solution();
+        solutionSink.nodes = copyNode(solutionSource.nodes);
+        solutionSink.clusters = copyCluster(solutionSource.clusters);
+        return solutionSink;
     }
-    static void copyNode(Node[] nodesSource, Node[] nodesSink) {
-        nodesSink = new Node[n];
+    static Node[] copyNode(Node[] nodesSource) {
+        Node[] nodesSink = new Node[n];
         for (int i = 0; i < n; i ++) {
             nodesSink[i] = new Node(nodesSource[i].id, nodesSource[i].x, nodesSource[i].y, nodesSource[i].c[0], nodesSource[i].c[1], nodesSource[i].dispersion);
             nodesSink[i].idCluster = nodesSource[i].idCluster;
             nodesSink[i].positionInCLuster = nodesSource[i].positionInCLuster;
         }
+        return nodesSink;
     }
-    static void copyCluster(Cluster[] clustersSource, Cluster[] clustersSink) {
-        clustersSink = new Cluster[numberClusters];
+    static Cluster[] copyCluster(Cluster[] clustersSource) {
+        Cluster[] clustersSink = new Cluster[numberClusters];
         for (int i = 0; i < numberClusters; i ++) {
             clustersSink[i] = new Cluster(clustersSource[i].id, expectationValues);
             clustersSink[i].nodes = new ArrayList <> ();
@@ -440,6 +602,7 @@ public class DistrictingALNS {
             clustersSink[i].minDispersion = clustersSource[i].minDispersion;
             clustersSink[i].sumFamiliarityDeviation = clustersSource[i].sumFamiliarityDeviation;
         }
+        return clustersSink;
     }
     //---------------------------------------------------------------------------------------------------
     static int rand(int l, int r) {
@@ -447,16 +610,16 @@ public class DistrictingALNS {
         return l + rd.nextInt(r - l + 1);
     }
     //---------------------------------------------------------------------------------------------------
-    static double getNewTotalCostAfterAddNode(double totalCostCurrent, Node node, Cluster cluster) {
+    static double getNewTotalCostAfterAddNode(Solution solution, double totalCostCurrent, Node node, Cluster cluster) {
         if (checkConnectedBetweenNodeAndCluster(node, cluster) == false)
             return 1e9;
-        return totalCostCurrent - cluster.getTotalCostOfCluster() + cluster.getNewTotalCostOfClusterAfterAddNode(node, expectationValues, familiarity, nodes, distance);
+        return totalCostCurrent - cluster.getTotalCostOfCluster() + cluster.getNewTotalCostOfClusterAfterAddNode(node, expectationValues, familiarity, solution.nodes, distance);
     }
     //---------------------------------------------------------------------------------------------------
-    static double getTotalCostCurrent() {
+    static double getTotalCostOfSolution(Solution solution) {
         double totalCost = 0;
         for (int idCluster = 0; idCluster < numberClusters; idCluster ++)
-            totalCost += clusters[idCluster].getTotalCostOfCluster();
+            totalCost += solution.clusters[idCluster].getTotalCostOfCluster();
         return totalCost;
     }
     //---------------------------------------------------------------------------------------------------
@@ -470,68 +633,322 @@ public class DistrictingALNS {
         }
         return false;
     }
-    static void updatePositionOfNodesInClusters() {
+    static void updatePositionOfNodesInClusters(Solution solution) {
         for (int idCluster = 0; idCluster < numberClusters; idCluster ++)
-            clusters[idCluster].updatePositionOfNodesInCluster(nodes);
+            solution.clusters[idCluster].updatePositionOfNodesInCluster(solution.nodes);
     }
     //---------------------------------------------------------------------------------------------------
-    static void randomRemoval() {
-        int eta = rand(n / 10, n / 4);
+    static void solve() {
+        ParameterOfOperation parameterOfOperationDestroy = new ParameterOfOperation(3),
+                             parameterOfOperationRepair = new ParameterOfOperation(4);
+        Solution newSolution = buildInitialSolution(),
+                 bestSolution = copySolution(newSolution);
+        double bestTotalCost = getTotalCostOfSolution(bestSolution);
+        for (int time = 0; time < 1000000; time ++) {
+            Solution currentSolution = copySolution(newSolution);
+            int operationDestroy = parameterOfOperationDestroy.getOperation();
+            if (operationDestroy == 0)
+                randomRemoval(newSolution);
+            else if (operationDestroy == 1)
+                routeRemoval(newSolution);
+            else
+                worstRemoval(newSolution);
+            int operationRepair = parameterOfOperationRepair.getOperation();
+            if (operationRepair == 0)
+                firstPossibleInsertion(newSolution);
+            else if (operationRepair == 1)
+                greedyInsertion(newSolution);
+            else if (operationRepair == 2)
+                secondBestInsertion(newSolution);
+            else
+                regretKInsertion(newSolution);
+            double currentTotalCost = getTotalCostOfSolution(currentSolution),
+                   newTotalCost = getTotalCostOfSolution(newSolution);
+            if (newTotalCost < bestTotalCost) {
+                bestSolution = copySolution(newSolution);
+                bestTotalCost = newTotalCost;
+                parameterOfOperationDestroy.scoreOperation[operationDestroy] += parameter.sigma1;
+                parameterOfOperationRepair.scoreOperation[operationRepair] += parameter.sigma1;
+                io.print("Best solution found at time " + time + " : ");
+                io.println("Best total cost: " + bestTotalCost);
+            }
+            else if (newTotalCost < currentTotalCost) {
+                currentTotalCost = newTotalCost;
+                parameterOfOperationDestroy.scoreOperation[operationDestroy] += parameter.sigma2;
+                parameterOfOperationRepair.scoreOperation[operationRepair] += parameter.sigma2;
+                io.print("New solution found at time " + time + " : ");
+                io.println("New total cost: " + newTotalCost);
+            }
+            else {
+                double value = Math.exp(-(newTotalCost - currentTotalCost) / parameter.temperature),
+                       randomValue = Math.random();
+                if (randomValue < value) {
+                    parameterOfOperationDestroy.scoreOperation[operationDestroy] += parameter.sigma3;
+                    parameterOfOperationRepair.scoreOperation[operationRepair] += parameter.sigma3;
+                }
+                else {
+                    newSolution = copySolution(currentSolution);
+                    parameterOfOperationDestroy.scoreOperation[operationDestroy] += parameter.sigma4;
+                    parameterOfOperationRepair.scoreOperation[operationRepair] += parameter.sigma4;
+                }
+            }
+            parameterOfOperationDestroy.updateProbabilityOperation(parameter.lambda);
+            parameter.temperature = (int)(parameter.temperature * parameter.coolingRate);
+        }
+        checkSolution(bestSolution);
+    }
+    //---------------------------------------------------------------------------------------------------
+    static void randomRemoval(Solution solution) {
+        int numberRequests = rand(parameter.lowerNumberRequests, parameter.upperNumberRequests);
         List <Integer> listRandom = new ArrayList <> ();
         for (int i = 0; i < n; i ++)
             listRandom.add(i);
         Collections.shuffle(listRandom);
         int[] numberNodesRemove = new int[numberClusters];
-        for (int i = 0; i < eta; i ++) {
+        for (int i = 0; i < numberRequests; i ++) {
             int u = listRandom.get(i);
-            numberNodesRemove[nodes[u].idCluster] ++;
+            numberNodesRemove[solution.nodes[u].idCluster] ++;
         }
         for (int idCluster = 0; idCluster < numberClusters; idCluster ++)
             if (numberNodesRemove[idCluster] > 0)
-                clusters[idCluster].randomRemovalCluster(numberNodesRemove[idCluster], expectationValues, familiarity, nodes, distance, adjacent);
+                solution.clusters[idCluster].randomRemovalCluster(numberNodesRemove[idCluster], expectationValues, familiarity, solution.nodes, distance, adjacent);
+        updatePositionOfNodesInClusters(solution);
     }
     //---------------------------------------------------------------------------------------------------
-    static void routeRemoval() {
-        int eta = rand(n / 10, n / 4);
+    static void routeRemoval(Solution solution) {
+        int numberRequests = rand(parameter.lowerNumberRequests, parameter.upperNumberRequests);
         List <Integer> listRandom = new ArrayList <> ();
         for (int i = 0; i < numberClusters; i ++)
             listRandom.add(i);
         Collections.shuffle(listRandom);
         for (int i = 0; i < numberClusters; i ++) {
             int idCluster = listRandom.get(i);
-            if (clusters[idCluster].nodes.size() == 0)
+            if (solution.clusters[idCluster].nodes.size() == 0)
                 continue;
-            int numberNodesRemove = Math.min(eta, clusters[idCluster].nodes.size());
-            clusters[idCluster].randomRemovalCluster(numberNodesRemove, expectationValues, familiarity, nodes, distance, adjacent);
-            eta -= numberNodesRemove;
-            if (eta == 0)
+            int numberNodesRemove = Math.min(numberRequests, solution.clusters[idCluster].nodes.size());
+            solution.clusters[idCluster].randomRemovalCluster(numberNodesRemove, expectationValues, familiarity, solution.nodes, distance, adjacent);
+            numberRequests -= numberNodesRemove;
+            if (numberRequests == 0)
                 break;
+        }
+        updatePositionOfNodesInClusters(solution);
+    }
+    //---------------------------------------------------------------------------------------------------
+    static void worstRemoval(Solution solution) {
+        int numberRequests = rand(parameter.lowerNumberRequests, parameter.upperNumberRequests);
+        int[] degree = new int[n],
+              parent = new int[n];
+        Arrays.fill(degree, -1);
+        Arrays.fill(parent, -1);
+        buildDegreeAndParent(degree, parent, solution);
+        SegmentGetMinValue seg = new SegmentGetMinValue(n, sizeSegmentTree(n));
+        updateSeg(seg, degree, solution);
+        for (int time = 0; time < numberRequests; time ++) {
+            int idNode = seg.getPosMinValue() - 1;
+            updateSegAfterRemoveNode(solution.nodes[idNode], seg, degree, parent, solution);
+        }
+        updatePositionOfNodesInClusters(solution);
+    }
+    static void updateSeg(SegmentGetMinValue seg, int[] degree, Solution solution) {
+        for (int idCluster = 0; idCluster < numberClusters; idCluster ++)
+            updateSegCluster(seg, degree, solution.clusters[idCluster], solution);
+    }
+    static void updateSegCluster(SegmentGetMinValue seg, int[] degree, Cluster cluster, Solution solution) {
+        double totalCostOfCluster = cluster.getTotalCostOfCluster();
+        for (int i = 0; i < cluster.nodes.size(); i ++) {
+            int idNode = cluster.nodes.get(i);
+            if (degree[idNode] == 0)
+                seg.update(posNodeInSegmentTree[idNode + 1], cluster.getNewTotalCostOfClusterAfterRemoveNode(solution.nodes[idNode], expectationValues, familiarity, solution.nodes, distance) - totalCostOfCluster);
+        }
+    }
+    static void updateSegAfterRemoveNode(Node node, SegmentGetMinValue seg, int[] degree, int[] parent, Solution solution) {
+        int idCluster = node.idCluster;
+        solution.clusters[idCluster].updateClusterAfterRemoveNode(node, expectationValues, familiarity, solution.nodes, distance);
+        seg.update(posNodeInSegmentTree[node.id + 1], 1e9);
+        updateDegreeAfterRemoveNode(node.id, degree, parent, solution);
+        updateSegCluster(seg, degree, solution.clusters[idCluster], solution);
+    }
+    static void buildDegreeAndParent(int[] degree, int[] parent, Solution solution) {
+        for (int idCluster = 0; idCluster < numberClusters; idCluster ++)
+            buildDegreeAndParentOfCluster(degree, parent, solution.clusters[idCluster], solution);
+    }
+    static void buildDegreeAndParentOfCluster(int[] degree, int[] parent, Cluster cluster, Solution solution) {
+        if (cluster.nodes.size() == 0)
+            return;
+        int root = cluster.nodes.get(rand(0, cluster.nodes.size() - 1));
+        bfsBuildDegreeAndParent(root, degree, parent, solution);
+    }
+    static void bfsBuildDegreeAndParent(int root, int[] degree, int[] parent, Solution solution) {
+        Queue <Integer> queue = new LinkedList <> ();
+        degree[root] = 0;
+        queue.add(root);
+        while (!queue.isEmpty()) {
+            int u = queue.poll();
+            for (int i = 0; i < adjacent.get(u).size(); i ++) {
+                int v = adjacent.get(u).get(i);
+                if (degree[v] == -1 && solution.nodes[v].idCluster == solution.nodes[u].idCluster) {
+                    parent[v] = u;
+                    degree[u] ++;
+                    degree[v] = 0;
+                    queue.add(v);
+                }
+            }
+        }
+    }
+    static void updateDegreeAfterRemoveNode(int u, int[] degree, int[] parent, Solution solution) {
+        degree[u] --;
+        if (parent[u] != -1)
+            degree[parent[u]] --;
+    }
+    //---------------------------------------------------------------------------------------------------
+    static List <Integer> buildListNodesNotInCluster(Solution solution) {
+        List <Integer> listNodesNotInCluster = new ArrayList <> ();
+        for (int i = 0; i < n; i ++)
+            if (solution.nodes[i].idCluster < 0)
+                listNodesNotInCluster.add(i);
+        return listNodesNotInCluster;
+    }
+    //---------------------------------------------------------------------------------------------------
+    static void firstPossibleInsertion(Solution solution) {
+        List <Integer> listNodesNotInCluster = buildListNodesNotInCluster(solution);
+        Collections.shuffle(listNodesNotInCluster);
+        List <Integer> listIdCluster = new ArrayList <> ();
+        for (int idCluster = 0; idCluster < numberClusters; idCluster ++)
+            listIdCluster.add(idCluster);
+        for (int i = 0; i < listNodesNotInCluster.size(); i ++) {
+            int idNode = listNodesNotInCluster.get(i);
+            Collections.shuffle(listIdCluster);
+            for (int j = 0; j < numberClusters; j ++) {
+                int idCluster = listIdCluster.get(j);
+                if (checkConnectedBetweenNodeAndCluster(solution.nodes[idNode], solution.clusters[idCluster]) == true) {
+                    solution.clusters[idCluster].updateClusterAfterAddNode(solution.nodes[idNode], expectationValues, familiarity, solution.nodes, distance);
+                    break;
+                }
+            }
         }
     }
     //---------------------------------------------------------------------------------------------------
-    static void checkSolution() {
-        printSolution();
-        checkNumberNodes();
-        checkConnected();
-        printCompareSolution();
+    static void greedyInsertion(Solution solution) {
+        List <Integer> listNodesNotInCluster = buildListNodesNotInCluster(solution);
+        Collections.shuffle(listNodesNotInCluster);
+        for (int i = 0; i < listNodesNotInCluster.size(); i ++) {
+            int idNode = listNodesNotInCluster.get(i), idClusterBest = -1;
+            double bestTotalCost = 1e9, totalCostCurrent = getTotalCostOfSolution(solution);
+            for (int idCluster = 0; idCluster < numberClusters; idCluster ++) {
+                double totalCost = getNewTotalCostAfterAddNode(solution, totalCostCurrent, solution.nodes[idNode], solution.clusters[idCluster]);
+                if (totalCost < bestTotalCost) {
+                    bestTotalCost = totalCost;
+                    idClusterBest = idCluster;
+                }
+            }
+            if (idClusterBest != -1)
+                solution.clusters[idClusterBest].updateClusterAfterAddNode(solution.nodes[idNode], expectationValues, familiarity, solution.nodes, distance);
+        }
     }
-    static void printSolution() {
+    //---------------------------------------------------------------------------------------------------
+    static void secondBestInsertion(Solution solution) {
+        List <Integer> listNodesNotInCluster = buildListNodesNotInCluster(solution);
+        Collections.shuffle(listNodesNotInCluster);
+        for (int i = 0; i < listNodesNotInCluster.size(); i ++) {
+            int idNode = listNodesNotInCluster.get(i), idClusterBest = -1, idClusterSecondBest = -1;
+            double bestTotalCost = 1e9, secondBestTotalCost = 1e9, totalCostCurrent = getTotalCostOfSolution(solution);
+            for (int idCluster = 0; idCluster < numberClusters; idCluster ++) {
+                double totalCost = getNewTotalCostAfterAddNode(solution, totalCostCurrent, solution.nodes[idNode], solution.clusters[idCluster]);
+                if (totalCost < bestTotalCost) {
+                    secondBestTotalCost = bestTotalCost;
+                    idClusterSecondBest = idClusterBest;
+                    bestTotalCost = totalCost;
+                    idClusterBest = idCluster;
+                }
+                else if (totalCost < secondBestTotalCost) {
+                    secondBestTotalCost = totalCost;
+                    idClusterSecondBest = idCluster;
+                }
+            }
+            if (idClusterSecondBest != -1)
+                solution.clusters[idClusterSecondBest].updateClusterAfterAddNode(solution.nodes[idNode], expectationValues, familiarity, solution.nodes, distance);
+        }
+    }
+    //---------------------------------------------------------------------------------------------------
+    static void regretKInsertion(Solution solution) {
+        List <Integer> listNodesNotInCluster = buildListNodesNotInCluster(solution);
+        int sizeListNodesNotInCluster = listNodesNotInCluster.size();
+        RegretK[] regretKs = new RegretK[sizeListNodesNotInCluster];
+        double totalCostCurrent = getTotalCostOfSolution(solution);
+        buildTotalCostOfCluster(solution, listNodesNotInCluster, regretKs, totalCostCurrent);
+        int[] visited = new int[sizeListNodesNotInCluster];
+        Arrays.fill(visited, 0);
+        for (int time = 0; time < sizeListNodesNotInCluster; time ++) {
+            int i = getIdNodeBest(solution, regretKs, visited),
+                idNode = listNodesNotInCluster.get(i),
+                idCluster = regretKs[i].bestClusterTotalCost[0];
+            totalCostCurrent = getTotalCostOfSolution(solution);
+            visited[i] = 1;
+            solution.clusters[idCluster].updateClusterAfterAddNode(solution.nodes[idNode], expectationValues, familiarity, solution.nodes, distance);
+            double totalCostNew = getTotalCostOfSolution(solution),
+                   delta = totalCostNew - totalCostCurrent;
+            updateRegretK(solution, listNodesNotInCluster, regretKs, visited, idCluster, totalCostNew, delta);
+        }
+    }
+    static void buildTotalCostOfCluster(Solution solution, List <Integer> listNodesNotInCluster, RegretK[] regretKs, double totalCostCurrent) {
+        for (int i = 0; i < listNodesNotInCluster.size(); i ++) {
+            regretKs[i] = new RegretK(3, numberClusters);
+            int idNode = listNodesNotInCluster.get(i);
+            for (int idCluster = 0; idCluster < numberClusters; idCluster ++)
+                regretKs[i].totalCostOfCluster[idCluster] = getNewTotalCostAfterAddNode(solution, totalCostCurrent, solution.nodes[idNode], solution.clusters[idCluster]);
+        }
+    }
+    static int getIdNodeBest(Solution solution, RegretK[] regretKs, int[] visited) {
+        int idNodeBest = -1;
+        double bestRegret = -1;
+        for (int i = 0; i < regretKs.length; i ++) {
+            if (visited[i] == 1)
+                continue;
+            regretKs[i].buildBestClusterTotalCost();
+            double regretOfNode = regretKs[i].getRegret();
+            if (regretOfNode > bestRegret) {
+                bestRegret = regretOfNode;
+                idNodeBest = i;
+            }
+        }
+        return idNodeBest;
+    }
+    static void updateRegretK(Solution solution, List <Integer> listNodesNotInCluster, RegretK[] regretKs, int[] visited, int idClusterUpdate, double totalCostCurrent, double delta) {
+        for (int i = 0; i < regretKs.length; i ++) {
+            if (visited[i] == 1)
+                continue;
+            int idNode = listNodesNotInCluster.get(i);
+            for (int idCluster = 0; idCluster < numberClusters; idCluster ++)
+                if (idCluster != idClusterUpdate)
+                    regretKs[i].totalCostOfCluster[idCluster] += delta;
+                else
+                    regretKs[i].totalCostOfCluster[idCluster] = getNewTotalCostAfterAddNode(solution, totalCostCurrent, solution.nodes[idNode], solution.clusters[idCluster]);
+        }
+    }
+    //---------------------------------------------------------------------------------------------------
+    static void checkSolution(Solution solution) {
+        printSolution(solution);
+        checkNumberNodes(solution);
+        checkConnected(solution);
+        printCompareSolution(solution);
+    }
+    static void printSolution(Solution solution) {
         io.println("Solution");
         for (int idCluster = 0; idCluster < numberClusters; idCluster ++) {
             io.print("Cluster " + idCluster + ": ");
-            for (int i = 0; i < clusters[idCluster].nodes.size(); i ++) {
-                int idNode = clusters[idCluster].nodes.get(i);
-                io.print(idNode + "(" + nodes[idNode].positionInCLuster + ")" + " ");
+            for (int i = 0; i < solution.clusters[idCluster].nodes.size(); i ++) {
+                int idNode = solution.clusters[idCluster].nodes.get(i);
+                io.print(idNode + "(" + solution.nodes[idNode].positionInCLuster + ")" + " ");
             }
             io.println();
         }
     }
-    static void checkNumberNodes() {
+    static void checkNumberNodes(Solution solution) {
         int[] visited = new int[n];
         Arrays.fill(visited, -1);
         for (int idCluster = 0; idCluster < numberClusters; idCluster ++) {
-            for (int i = 0; i < clusters[idCluster].nodes.size(); i ++) {
-                int idNode = clusters[idCluster].nodes.get(i);
+            for (int i = 0; i < solution.clusters[idCluster].nodes.size(); i ++) {
+                int idNode = solution.clusters[idCluster].nodes.get(i);
                 if (visited[idNode] >= 0) {
                     io.println("Error: node " + idNode + " is already visited in cluster " + visited[idNode]);
                     return;
@@ -541,12 +958,12 @@ public class DistrictingALNS {
         }
         io.println("Check number nodes: OK");
     }
-    static void checkConnected() {
+    static void checkConnected(Solution solution) {
         for (int idCluster = 0; idCluster < numberClusters; idCluster ++) {
-            for (int i = 0; i < clusters[idCluster].nodes.size(); i ++) {
-                int idNode = clusters[idCluster].nodes.get(i), ok = 0;
-                for (int j = 0; j < clusters[idCluster].nodes.size(); j ++) {
-                    int idNode2 = clusters[idCluster].nodes.get(j);
+            for (int i = 0; i < solution.clusters[idCluster].nodes.size(); i ++) {
+                int idNode = solution.clusters[idCluster].nodes.get(i), ok = 0;
+                for (int j = 0; j < solution.clusters[idCluster].nodes.size(); j ++) {
+                    int idNode2 = solution.clusters[idCluster].nodes.get(j);
                     if (idNode != idNode2 && connected[idNode][idNode2] == true) {
                         ok = 1;
                         break;
@@ -560,30 +977,30 @@ public class DistrictingALNS {
         }
         io.println("Check connected: OK");
     }
-    static void printCompareSolution() {
-        double totalCost1 = 0, totalCost2 = getTotalCostCurrent();
+    static void printCompareSolution(Solution solution) {
+        double totalCost1 = 0, totalCost2 = getTotalCostOfSolution(solution);
         for (int idCluster = 0; idCluster < numberClusters; idCluster ++) {
-            double sumCExpectationValue = calSumCExpectationValue(clusters[idCluster]);
+            double sumCExpectationValue = calSumCExpectationValue(solution, solution.clusters[idCluster]);
             totalCost1 += sumCExpectationValue * 1000;
-            int sumFamiliarityDeviation = calSumFamiliarityDeviation(clusters[idCluster]);
+            int sumFamiliarityDeviation = calSumFamiliarityDeviation(solution.clusters[idCluster]);
             totalCost1 += sumFamiliarityDeviation * 500;
-            double minDispersion = calMinDispersion(clusters[idCluster]);
+            double minDispersion = calMinDispersion(solution.clusters[idCluster]);
             totalCost1 += minDispersion;
             io.println("Cluster " + idCluster + " :");
-            io.println("sumCExpectationValue = " + sumCExpectationValue + " - " + clusters[idCluster].sumCExpectationValue);
-            io.println("sumFamiliarityDeviation = " + sumFamiliarityDeviation + " - " + clusters[idCluster].sumFamiliarityDeviation);
-            io.println("minDispersion = " + minDispersion + " - " + clusters[idCluster].minDispersion);
-            io.println("totalCostOfCluster = " + (sumCExpectationValue * 1000 + sumFamiliarityDeviation * 500 + minDispersion - clusters[idCluster].getTotalCostOfCluster()));
+            io.println("sumCExpectationValue = " + sumCExpectationValue + " - " + solution.clusters[idCluster].sumCExpectationValue);
+            io.println("sumFamiliarityDeviation = " + sumFamiliarityDeviation + " - " + solution.clusters[idCluster].sumFamiliarityDeviation);
+            io.println("minDispersion = " + minDispersion + " - " + solution.clusters[idCluster].minDispersion);
+            io.println("totalCostOfCluster = " + (sumCExpectationValue * 1000 + sumFamiliarityDeviation * 500 + minDispersion) + " " + solution.clusters[idCluster].getTotalCostOfCluster());
         }
         io.println("totalCost: " + totalCost1 + " - " + totalCost2);
     }
-    static double calSumCExpectationValue(Cluster cluster) {
+    static double calSumCExpectationValue(Solution solution, Cluster cluster) {
         double ans = 0;
         double[] sumC = new double[2];
         for (int type = 0; type < 2; type ++)
             for (int i = 0; i < cluster.nodes.size(); i ++) {
                 int idNode = cluster.nodes.get(i);
-                sumC[type] += nodes[idNode].c[type];
+                sumC[type] += solution.nodes[idNode].c[type];
             }
         for (int type = 0; type < 2; type ++) {
             double val = sumC[type];
