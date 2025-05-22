@@ -22,7 +22,7 @@ public class PathValidExtend extends PathBasicExtend {
         for (List<Long> path : paths) {
             visited.clear();
             for (Long node_id : path) {
-                visited.put(node_id , true);
+                visited.put(node_id , Boolean.TRUE);
             }
             Long first_node_id = path.getFirst();
             for (Long node_id : input.getNodeIds()) {

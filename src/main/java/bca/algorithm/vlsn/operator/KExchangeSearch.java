@@ -37,7 +37,14 @@ public class KExchangeSearch {
         }
         this.pathExtend = new BCAPathExtend(input, solution, node_cluster_map);
     }
-
+    public KExchangeSearch(int K, Input input, Solution solution, Map<Long, Long> node_cluster_map) {
+        this.K = K;
+        this.input = input;
+        this.solution = solution;
+//        this.pathExtend = new PathValidExtend(input);
+        this.node_cluster_map = node_cluster_map;
+        this.pathExtend = new BCAPathExtend(input, solution, node_cluster_map);
+    }
     public List<Long> search() {
         int k = 1;
         int num_node = input.getNum_nodes();
@@ -65,6 +72,11 @@ public class KExchangeSearch {
 //            if (k > 2)
             {
                 for (List<Long> path : extendedPaths) {
+                    if (path.getLast() == -1) {
+                        deltas.add(Double.POSITIVE_INFINITY);
+                        path.removeLast();
+                        continue;
+                    }
                     List<Long> cluster_id = new ArrayList<>();
                     for (Long nodeId : path) {
                         cluster_id.add(node_cluster_map.getOrDefault(nodeId, null));
@@ -128,13 +140,22 @@ public class KExchangeSearch {
 
 
             List<Integer> indices = new ArrayList<>();
-            for (int i = 0; i < pathSet.size(); i++) {
+            for (int i = 0; i < extendedPaths.size(); i++) {
                 indices.add(i);
             }
             indices.sort(Comparator.comparingDouble(deltas::get));
+            if (indices.size() > num_node * 10) {
+                if (indices.size() > num_node * 15) {
+                    indices.subList(num_node * 15, indices.size()).clear();
+                }
+                Collections.shuffle(indices);
+                indices.subList(num_node * 10, indices.size()).clear();
+            }
+//            if (indices.size() > num_node * num_node) {
+//                indices.subList(num_node * num_node, indices.size()).clear();
+//            }
             pathSet.clear();
-            for (int i = 0; i < indices.size() && i < num_node * 5; i++) {
-                int index = indices.get(i);
+            for (int index : indices) {
                 pathSet.add(extendedPaths.get(index));
 //                deltas.add(deltas.get(index));
             }

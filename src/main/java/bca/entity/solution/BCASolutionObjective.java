@@ -222,6 +222,78 @@ public class BCASolutionObjective implements SolutionObjective {
 
         return calculate();
     }
+    public double updateClusterAcyclic(Solution solution, List<Long> vehicle_ids, List<Long> path) {
+        List<SolutionCluster> solution_clusters = new ArrayList<>();
+        Set<Long> vehicle_set = new HashSet<>();
+        for (Long vehicle_id : vehicle_ids) {
+            if (vehicle_set.contains(vehicle_id)) {
+                continue;
+            }
+            vehicle_set.add(vehicle_id);
+        }
+        for (Long vehicle_id : vehicle_ids) {
+            solution_clusters.add(solution.getSolutionClusterById(vehicle_id));
+        }
+
+        double obj = 0;
+        for (Long vehicle_id : vehicle_set) {
+            obj -= customer_demand_weight * (calcCustomerVariance(customer_totals.get(vehicle_id.intValue())) +
+                    calcDemandVariance(demand_totals.get(vehicle_id.intValue())));
+        }
+
+        for (int i = 0; i < path.size(); i++) {
+            Long node_id = path.get(i);
+            Long vehicle_id = vehicle_ids.get(i);
+            SolutionCluster solution_cluster = solution_clusters.get(i);
+
+            if (i + 1 < path.size()) {
+                Long next_vehicle_id = vehicle_ids.get(i + 1);
+                SolutionCluster next_solution_cluster = solution_clusters.get(i + 1);
+                obj += distance_weight * (input.getNodeDistance(next_solution_cluster.getCenter_id(), node_id) -
+                        input.getNodeDistance(solution_cluster.getCenter_id(), node_id));
+                obj += familiarity_weight * (((BCAVehicle) input.getVehicleById(next_vehicle_id)).getFamiliarity(node_id) -
+                        ((BCAVehicle) input.getVehicleById(vehicle_id)).getFamiliarity(node_id));
+            }
+
+            double customer_total = customer_totals.get(vehicle_id.intValue());
+            double demand_total = demand_totals.get(vehicle_id.intValue());
+            if (i + 1 < path.size()) {
+                customer_total -= ((BCANode) input.getNodeById(node_id)).getExpected_customers();
+                demand_total -= ((BCANode) input.getNodeById(node_id)).getExpected_demands();
+            }
+            if (i > 0) {
+                Long prev_node_id = path.get(i - 1);
+                customer_total += ((BCANode) input.getNodeById(prev_node_id)).getExpected_customers();
+                demand_total += ((BCANode) input.getNodeById(prev_node_id)).getExpected_demands();
+            }
+            customer_totals.set(vehicle_id.intValue(), customer_total);
+            demand_totals.set(vehicle_id.intValue(), demand_total);
+        }
+
+        for (Long vehicle_id : vehicle_set) {
+            obj += customer_demand_weight * (calcCustomerVariance(customer_totals.get(vehicle_id.intValue())) +
+                    calcDemandVariance(demand_totals.get(vehicle_id.intValue())));
+        }
+        for (int i = 0; i < path.size(); i++) {
+            Long node_id = path.get(i);
+            Long vehicle_id = vehicle_ids.get(i);
+            double customer_total = customer_totals.get(vehicle_id.intValue());
+            double demand_total = demand_totals.get(vehicle_id.intValue());
+            if (i + 1 < path.size()) {
+                customer_total += ((BCANode) input.getNodeById(node_id)).getExpected_customers();
+                demand_total += ((BCANode) input.getNodeById(node_id)).getExpected_demands();
+            }
+            if (i > 0) {
+                Long prev_node_id = path.get(i - 1);
+                customer_total -= ((BCANode) input.getNodeById(prev_node_id)).getExpected_customers();
+                demand_total -= ((BCANode) input.getNodeById(prev_node_id)).getExpected_demands();
+            }
+            customer_totals.set(vehicle_id.intValue(), customer_total);
+            demand_totals.set(vehicle_id.intValue(), demand_total);
+        }
+
+        return obj;
+    }
 
     public double updateCluster(Solution solution, List<Long> vehicle_ids, List<Long> path) {
 //        BCASolution bcaSolution = (BCASolution)solution;

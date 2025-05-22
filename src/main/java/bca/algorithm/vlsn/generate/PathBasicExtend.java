@@ -25,7 +25,7 @@ public class PathBasicExtend implements PathExtend {
         for (List<Long> path : paths) {
             visited.clear();
             for (Long node_id: path) {
-                visited.put(node_id, true);
+                visited.put(node_id, Boolean.TRUE);
             }
 
             for (Long node_id : input.getNodeIds()) {
